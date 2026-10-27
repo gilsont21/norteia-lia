@@ -1,10 +1,10 @@
-# Norteia
+# Norteia Lia
 
 Gerenciador de tarefas para desktop, com calendário, assistente de IA integrado e sincronização com o Google Calendar. Feito em Python (PySide6 + SQLite), com tema escuro, funcionando offline e com os dados na máquina da pessoa.
 
 Criado por Gilson Tavares da Silva para a **LIA, Liga de Inteligência Artificial**. Projeto em desenvolvimento, versão 0.7.
 
-> **English summary:** Norteia is a local-first desktop task manager (Python, PySide6, SQLite) with a full calendar, Google Calendar two-way sync and an AI assistant that reads your tasks and proposes changes as a reviewable plan (apply, then undo). The AI layer is provider-agnostic (Gemini, Claude, ChatGPT, DeepSeek), accepts files and voice, and has 447 automated tests behind it. Source is visible for evaluation only (see `LICENSE`).
+> **English summary:** Norteia Lia is a local-first desktop task manager (Python, PySide6, SQLite) with a full calendar, Google Calendar two-way sync and an AI assistant that reads your tasks and proposes changes as a reviewable plan (apply, then undo). The AI layer is provider-agnostic (Gemini, Claude, ChatGPT, DeepSeek), accepts files and voice, and has 447 automated tests behind it. Source is visible for evaluation only (see `LICENSE`).
 
 ## Como ficou
 

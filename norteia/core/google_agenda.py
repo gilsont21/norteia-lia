@@ -118,10 +118,10 @@ def _pkce() -> tuple[str, str]:
     return verificador, desafio
 
 
-_PAGINA_OK = ("<html><head><meta charset='utf-8'><title>Norteia</title></head><body style='font-family:sans-serif;"
+_PAGINA_OK = ("<html><head><meta charset='utf-8'><title>Norteia Lia</title></head><body style='font-family:sans-serif;"
               "background:#1c1c1c;color:#e8e8e8;text-align:center;padding-top:80px'><h2>Tudo certo!</h2>"
-              "<p>O Google Calendar foi conectado. Pode fechar esta aba e voltar para o Norteia.</p></body></html>")
-_PAGINA_ERRO = ("<html><head><meta charset='utf-8'><title>Norteia</title></head><body style='font-family:sans-serif;"
+              "<p>O Google Calendar foi conectado. Pode fechar esta aba e voltar para o Norteia Lia.</p></body></html>")
+_PAGINA_ERRO = ("<html><head><meta charset='utf-8'><title>Norteia Lia</title></head><body style='font-family:sans-serif;"
                 "background:#1c1c1c;color:#e8e8e8;text-align:center;padding-top:80px'><h2>Não deu certo</h2>"
                 "<p>{msg}</p></body></html>")
 

@@ -273,7 +273,7 @@ def test_foco_pomodoro_completo_registra_sessao(janela, avisos):
     assert len(sessoes) == 1 and sessoes[0].duracao_s == 1500 and sessoes[0].tarefa_uuid == t.uuid
     assert len(pf.registros) == 1
     pf.pular()
-    assert not pf.cron.ativo and janela.windowTitle() == "Norteia"
+    assert not pf.cron.ativo and janela.windowTitle() == "Norteia Lia"
 
 
 def test_foco_pausar_parar_e_cronometro(janela):

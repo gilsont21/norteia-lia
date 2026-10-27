@@ -416,7 +416,7 @@ def test_autostart_grava_e_remove_a_entrada(tmp_path):
     assert not autostart.ligado(cfg)
     autostart.definir(True, cfg, linha='"C:\\App\\Norteia.exe" --minimizado')
     assert autostart.ligado(cfg)
-    assert cfg.value("Norteia") == '"C:\\App\\Norteia.exe" --minimizado'
+    assert cfg.value("Norteia Lia") == '"C:\\App\\Norteia.exe" --minimizado'
     autostart.definir(False, cfg)
     assert not autostart.ligado(cfg)
 
@@ -428,9 +428,9 @@ def test_autostart_reconhece_e_limpa_a_entrada_do_nome_antigo(tmp_path):
     cfg.setValue("Tarefas", '"C:\\Velho\\Tarefas.exe" --minimizado')
     assert autostart.ligado(cfg)                      # versão antiga já instalada continua valendo
     autostart.definir(True, cfg, linha='"C:\\Novo\\Norteia.exe" --minimizado')
-    assert not cfg.contains("Tarefas") and cfg.contains("Norteia")
+    assert not cfg.contains("Tarefas") and cfg.contains("Norteia Lia")
     autostart.definir(False, cfg)
-    assert not cfg.contains("Norteia") and not autostart.ligado(cfg)
+    assert not cfg.contains("Norteia Lia") and not autostart.ligado(cfg)
 
 
 def test_comando_do_autostart_abre_minimizado_e_sem_terminal():

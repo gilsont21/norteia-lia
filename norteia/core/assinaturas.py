@@ -31,7 +31,7 @@ def normalizar_url(url: str) -> str:
 
 def baixar(url: str, timeout: float = 20.0) -> str:
     """Só rede (sem banco): pode rodar numa thread."""
-    req = urllib.request.Request(normalizar_url(url), headers={"User-Agent": "Norteia/1.0"})
+    req = urllib.request.Request(normalizar_url(url), headers={"User-Agent": "NorteiaLia/1.0"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             bruto = resp.read(20 * 1024 * 1024)

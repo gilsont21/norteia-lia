@@ -1,15 +1,15 @@
-; Instalador do Norteia (Inno Setup, gratuito: jrsoftware.org).
-; Antes: rode 2-criar-exe.bat para gerar a pasta dist\Norteia.
+; Instalador do Norteia Lia (Inno Setup, gratuito: jrsoftware.org).
+; Antes: rode 2-criar-exe.bat para gerar a pasta dist\NorteiaLia.
 [Setup]
-AppName=Norteia
+AppName=Norteia Lia
 AppVersion=0.7.0
 AppPublisher=LIA
-DefaultDirName={autopf}\Norteia
-DefaultGroupName=Norteia
-OutputBaseFilename=Instalar-Norteia
+DefaultDirName={autopf}\Norteia Lia
+DefaultGroupName=Norteia Lia
+OutputBaseFilename=Instalar-NorteiaLia
 OutputDir=..\dist
 SetupIconFile=norteia.ico
-UninstallDisplayIcon={app}\Norteia.exe
+UninstallDisplayIcon={app}\NorteiaLia.exe
 Compression=lzma2
 SolidCompression=yes
 PrivilegesRequired=lowest
@@ -23,15 +23,15 @@ Name: "icone"; Description: "Criar atalho na área de trabalho"; GroupDescriptio
 Name: "iniciar"; Description: "Abrir junto com o Windows (recomendado, para os lembretes nunca falharem)"; GroupDescription: "Lembretes:"
 
 [Files]
-Source: "..\dist\Norteia\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
+Source: "..\dist\NorteiaLia\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 
 [Icons]
-Name: "{group}\Norteia"; Filename: "{app}\Norteia.exe"
-Name: "{autodesktop}\Norteia"; Filename: "{app}\Norteia.exe"; Tasks: icone
+Name: "{group}\Norteia Lia"; Filename: "{app}\NorteiaLia.exe"
+Name: "{autodesktop}\Norteia Lia"; Filename: "{app}\NorteiaLia.exe"; Tasks: icone
 
 [Registry]
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "Norteia"; \
-    ValueData: """{app}\Norteia.exe"" --minimizado"; Flags: uninsdeletevalue; Tasks: iniciar
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "Norteia Lia"; \
+    ValueData: """{app}\NorteiaLia.exe"" --minimizado"; Flags: uninsdeletevalue; Tasks: iniciar
 
 [Run]
-Filename: "{app}\Norteia.exe"; Description: "Abrir o Norteia agora"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\NorteiaLia.exe"; Description: "Abrir o Norteia Lia agora"; Flags: nowait postinstall skipifsilent

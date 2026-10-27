@@ -19,7 +19,7 @@ URL_CONSOLE = "https://console.cloud.google.com/"
 
 AJUDA_CREDENCIAIS = (
     "<b>Como obter o Client ID e o Client secret (uma vez só, uns 5 minutos):</b><ol>"
-    f"<li>Abra o <a href='{URL_CONSOLE}'><span style='color:#6ab7ff'>Google Cloud Console</span></a> com a sua conta e crie um projeto (ex.: “Norteia”).</li>"
+    f"<li>Abra o <a href='{URL_CONSOLE}'><span style='color:#6ab7ff'>Google Cloud Console</span></a> com a sua conta e crie um projeto (ex.: “Norteia Lia”).</li>"
     "<li>Em <i>APIs e serviços › Biblioteca</i>, procure <b>Google Calendar API</b> e clique em <b>Ativar</b>.</li>"
     "<li>Em <i>Tela de permissão OAuth</i>, escolha <b>Externo</b>, preencha o nome do app e o seu e-mail. Depois "
     "clique em <b>Publicar app</b> (status “Em produção”). Sem isso o login vence a cada 7 dias.</li>"
