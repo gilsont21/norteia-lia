@@ -59,6 +59,26 @@ def test_configuracao_chave_some_da_tela_e_so_mostra_o_final(janela):
     assert d.estado_chave.text() == "sem chave"
 
 
+def test_dialogo_escolhe_quem_transcreve_a_voz_e_guarda_a_chave_do_groq(janela):
+    svc = janela.servico
+    d = DialogoIA(None, svc, em_thread=False)
+    chat = [d.combo.itemData(i) for i in range(d.combo.count())]
+    assert "groq" not in chat and "gemini" in chat                      # Groq só transcreve voz
+    voz = [d.combo_voz.itemData(i) for i in range(d.combo_voz.count())]
+    assert voz == ["", "gemini", "openai", "groq"]
+    assert not d.caixa_voz.isVisibleTo(d)
+    d.combo_voz.setCurrentIndex(d.combo_voz.findData("groq"))
+    assert svc.ia.voz_escolhida == "groq" and d.caixa_voz.isVisibleTo(d)
+    d.campo_chave_voz.setText("gsk-uma-chave-secreta-7Y7Y")
+    d.salvar_chave_voz()
+    assert d.campo_chave_voz.text() == "" and "7Y7Y" in d.info_voz.text() and "secreta" not in d.info_voz.text()
+    assert svc.ia.tem_chave("groq") and d.btn_apagar_voz.isEnabled()
+    d.apagar_chave_voz()
+    assert not svc.ia.tem_chave("groq")
+    d.combo_voz.setCurrentIndex(0)
+    assert svc.ia.voz_escolhida == "" and not d.caixa_voz.isVisibleTo(d)
+
+
 def test_testar_conexao_mostra_resultado_ou_erro(janela):
     svc = janela.servico
     svc.ia.salvar_chave("gemini", "chave-de-teste-123")

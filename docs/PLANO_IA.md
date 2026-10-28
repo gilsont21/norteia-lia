@@ -21,7 +21,7 @@ App da LIA, sem servidor: tudo roda no PC de cada membro e vai direto do app par
 | Página de chat (ícone novo na barra, Ctrl+8) com sugestões rápidas e cartão do plano | `norteia/ui/pagina_ia.py` | Feito |
 | Erros passageiros do provedor (500, 502, 503, 504): o app tenta 3 vezes, esperando 2 s e 5 s, e depois mostra uma mensagem clara em português | `ia_provedores.py` | Feito |
 | Anexos no chat: imagem, PDF, Word e texto (clipe, arrastar, Ctrl+V; até 5; imagens grandes reduzidas) | `arquivos_ia.py`, `pagina_ia.py` | Feito, testado com IA simulada |
-| Voz no chat: gravação do microfone, onda animada, transcrição pelo Gemini (áudio embutido) ou ChatGPT (whisper-1) | `voz.py`, `ia_provedores.transcrever` | Feito, testado com microfone simulado |
+| Voz no chat: gravação do microfone, onda animada, transcrição pelo Gemini (áudio embutido), ChatGPT (gpt-transcribe) ou Groq (whisper-large-v3-turbo); a escolha de quem transcreve é separada da IA do chat | `voz.py`, `ia_provedores.transcrever` | Feito, testado com microfone simulado |
 | "Sugerir subtarefas" usa a IA escolhida (e o caminho antigo do Claude continua valendo sem chave nova) | `janela.py` | Feito |
 
 Ferramentas de leitura: tarefas por filtro, busca, agenda (inclui eventos do Google), listas e estatísticas (concluídas por
@@ -31,14 +31,16 @@ tarefa, criar lista e guardar preferência.
 ## O que NÃO está feito
 - Anexos e voz só foram testados com simulações: falta ensaiar com microfone real no Windows (confira em Configurações >
   Privacidade e segurança > Microfone se o app tem acesso) e com imagens reais em cada provedor.
-- Voz só no Gemini e no ChatGPT. Claude e DeepSeek não recebem áudio. PDF no DeepSeek exige `pip install pypdf`.
+- Voz só no Gemini, no ChatGPT e no Groq (que só serve para voz). Claude e DeepSeek não recebem áudio, mas dá para usar Claude ou DeepSeek no chat e Groq na voz. PDF no DeepSeek exige `pip install pypdf`.
 - Arquivos além de imagem, PDF, Word e texto (planilhas, vídeo, áudio solto) ainda não.
 - Plano do dia proativo (notificação de manhã) e revisão semanal automática. O chat já responde "planejar meu dia" e
   "analisar minha rotina" quando você pede.
 - Painel lateral do chat dentro da lista de tarefas (hoje o chat é uma página própria).
 - Lista de modelos vinda da API do provedor.
 - Chamadas reais: tudo foi testado contra respostas simuladas no formato de cada provedor. Os nomes de modelo padrão
-  (gemini-2.5-flash, claude-sonnet-4-5, gpt-4o-mini, deepseek-chat) são os que eu conheço e podem ter mudado. Se o "Testar
+  foram conferidos nas páginas oficiais em 28/10/2026 (gemini-3.8-flash, claude-haiku-5-5, deepseek-flash,
+  gpt-transcribe e whisper-large-v3-turbo para voz). O gpt-4o-mini do ChatGPT não foi reconferido e pode estar velho.
+  Os nomes mudam com o tempo: o whisper-1 da OpenAI sai do ar em 26/02/2027. Se o "Testar
   conexão" disser que o modelo não foi encontrado, troque o nome em Avançado.
 
 ## Segurança e privacidade (limites honestos)

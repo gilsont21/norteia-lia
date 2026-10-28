@@ -148,7 +148,7 @@ def test_provedor_padrao_modelo_e_preferencias():
     c.definir_modelo("deepseek", " meu-modelo ")
     assert c.modelo() == "meu-modelo"
     c.definir_modelo("deepseek", "")
-    assert c.modelo() == "deepseek-chat"
+    assert c.modelo() == "deepseek-flash"
     c.adicionar_preferencia("não marcar nada antes das 8h")
     c.adicionar_preferencia("não marcar nada antes das 8h")
     assert c.preferencias == ["não marcar nada antes das 8h"]
@@ -394,9 +394,11 @@ def test_imagem_e_pdf_vao_no_formato_de_cada_provedor(nome, fmt):
         assert "image_url" in corpo and '"type": "file"' in corpo
 
 
-def test_deepseek_nao_le_imagem_mas_le_pdf_como_texto(monkeypatch):
+def test_deepseek_le_imagem_e_le_pdf_como_texto(monkeypatch):
+    img = prov.preparar_anexos("deepseek", [arq.carregar_bytes("a.png", png_minimo())])
+    assert img[0]["tipo"] == "imagem"
     with pytest.raises(ErroIA, match="não lê imagens"):
-        prov.preparar_anexos("deepseek", [arq.carregar_bytes("a.png", png_minimo())])
+        prov.preparar_anexos("groq", [arq.carregar_bytes("a.png", png_minimo())])
     monkeypatch.setattr(prov, "texto_do_pdf", lambda dados: "texto do pdf extraído")
     a = prov.preparar_anexos("deepseek", [arq.carregar_bytes("c.pdf", b"%PDF")])
     assert a[0]["tipo"] == "texto" and "extraído" in a[0]["texto"]
@@ -467,8 +469,43 @@ def test_transcricao_com_chatgpt_usa_o_envio_de_arquivo():
         return {"text": " oi, tudo bem "}
 
     assert prov.transcrever(pedido("openai"), b"WAV", transporte_arquivo=envio) == "oi, tudo bem"
-    assert vistos["url"].endswith("/audio/transcriptions") and vistos["campos"]["language"] == "pt"
+    assert vistos["url"].endswith("/audio/transcriptions") and vistos["campos"] == {"model": "gpt-transcribe"}
     assert vistos["arquivo"][1] == "voz.wav" and "Bearer" in vistos["cab"]["authorization"]
+
+
+def test_transcricao_com_groq_usa_whisper_turbo_e_idioma_portugues():
+    vistos = {}
+
+    def envio(url, cab, campos, arquivo):
+        vistos.update(url=url, campos=campos)
+        return {"text": "olá"}
+
+    assert prov.transcrever(pedido("groq"), b"WAV", transporte_arquivo=envio) == "olá"
+    assert vistos["url"] == "https://api.groq.com/openai/v1/audio/transcriptions"
+    assert vistos["campos"] == {"model": "whisper-large-v3-turbo", "language": "pt"}
+
+
+def test_modelos_padrao_atuais():
+    assert prov.PROVEDORES["gemini"].modelo_padrao == "gemini-3.8-flash"
+    assert prov.PROVEDORES["claude"].modelo_padrao == "claude-haiku-5-5"
+    assert prov.PROVEDORES["deepseek"].modelo_padrao == "deepseek-flash"
+    assert prov.PROVEDORES["groq"].so_voz and prov.PROVEDORES["groq"].voz
+
+
+def test_quem_transcreve_a_voz():
+    c = config(servico())
+    c.definir_ativo("claude")
+    assert c.provedor_voz() is None                               # Claude não transcreve e ninguém tem chave
+    c.salvar_chave("groq", "chave-groq-123456")
+    assert c.provedor_voz() == "groq"                             # primeira com chave
+    c.definir_ativo("gemini")
+    assert c.provedor_voz() == "gemini"                           # a IA do chat, se transcreve
+    c.definir_voz("groq")
+    assert c.voz_escolhida == "groq" and c.provedor_voz() == "groq"
+    c.definir_voz("")
+    assert c.provedor_voz() == "gemini"
+    with pytest.raises(ValueError):
+        c.definir_voz("claude")
 
 
 @pytest.mark.parametrize("nome", ["claude", "deepseek"])

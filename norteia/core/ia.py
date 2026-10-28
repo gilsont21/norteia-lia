@@ -12,7 +12,7 @@ import urllib.error
 import urllib.request
 
 URL = "https://api.anthropic.com/v1/messages"
-MODELO_PADRAO = "claude-sonnet-4-5"
+MODELO_PADRAO = "claude-haiku-5-5"
 VERSAO_API = "2023-06-01"
 
 

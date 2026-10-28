@@ -68,7 +68,8 @@ class DialogoIA(QDialog):
         lay.addWidget(QLabel("<b>Qual IA o assistente vai usar?</b>"))
         self.combo = QComboBox()
         for chave, p in PROVEDORES.items():
-            self.combo.addItem(p.rotulo, chave)
+            if not p.so_voz:
+                self.combo.addItem(p.rotulo, chave)
         self.combo.setCurrentIndex(self.combo.findData(self.cfg.ativo))
         lay.addWidget(self.combo)
         self.info = QLabel("")
@@ -89,6 +90,31 @@ class DialogoIA(QDialog):
         lay.addLayout(linha)
         self.estado_chave = QLabel("")
         lay.addWidget(self.estado_chave)
+
+        lay.addWidget(QLabel("<b>Quem transcreve a sua voz?</b>"))
+        self.combo_voz = QComboBox()
+        self.combo_voz.addItem("Automático (a IA do chat, se ela transcrever)", "")
+        for chave, p in PROVEDORES.items():
+            if p.voz:
+                self.combo_voz.addItem(p.rotulo, chave)
+        self.combo_voz.setCurrentIndex(max(0, self.combo_voz.findData(self.cfg.voz_escolhida)))
+        lay.addWidget(self.combo_voz)
+        self.info_voz = QLabel("")
+        self.info_voz.setWordWrap(True)
+        self.info_voz.setObjectName("mensagemVazia")
+        lay.addWidget(self.info_voz)
+        self.caixa_voz = QWidget()
+        lay_v = QHBoxLayout(self.caixa_voz)
+        lay_v.setContentsMargins(0, 0, 0, 0)
+        self.campo_chave_voz = QLineEdit()
+        self.campo_chave_voz.setEchoMode(QLineEdit.Password)
+        self.campo_chave_voz.setPlaceholderText("Cole a chave da voz aqui. Ela só aparece agora.")
+        self.btn_salvar_voz = QPushButton("Salvar chave")
+        self.btn_apagar_voz = QPushButton("Apagar chave")
+        lay_v.addWidget(self.campo_chave_voz, 1)
+        lay_v.addWidget(self.btn_salvar_voz)
+        lay_v.addWidget(self.btn_apagar_voz)
+        lay.addWidget(self.caixa_voz)
 
         self.btn_avancado = QPushButton("Avançado ▸")
         self.btn_avancado.setFlat(True)
@@ -136,6 +162,9 @@ class DialogoIA(QDialog):
         self._sinais = _Sinais()
         self._sinais.pronto.connect(self._fim_teste)
         self.combo.currentIndexChanged.connect(self._trocou_provedor)
+        self.combo_voz.currentIndexChanged.connect(self._trocou_voz)
+        self.btn_salvar_voz.clicked.connect(self.salvar_chave_voz)
+        self.btn_apagar_voz.clicked.connect(self.apagar_chave_voz)
         self.btn_salvar.clicked.connect(self.salvar_chave)
         self.btn_apagar.clicked.connect(self.apagar_chave)
         self.btn_testar.clicked.connect(self.testar)
@@ -158,6 +187,50 @@ class DialogoIA(QDialog):
         self.cfg.definir_ativo(self.provedor)
         self._atualizar()
 
+    @property
+    def provedor_voz_escolhido(self) -> str:
+        return self.combo_voz.currentData()
+
+    def _trocou_voz(self):
+        self.cfg.definir_voz(self.provedor_voz_escolhido)
+        self._atualizar_voz()
+
+    def _atualizar_voz(self):
+        escolhido = self.provedor_voz_escolhido
+        efetivo = escolhido or self.cfg.provedor_voz()
+        if not efetivo:
+            self.info_voz.setText("A IA escolhida acima não transcreve voz. Escolha Gemini, ChatGPT ou Groq aqui "
+                                  "para usar o microfone.")
+        elif escolhido == "groq":
+            p = PROVEDORES["groq"]
+            self.info_voz.setText(f"{p.custo}\nOnde criar a chave: {p.onde_chave}\n{self.cfg.mascara('groq')}")
+        else:
+            p = PROVEDORES[efetivo]
+            self.info_voz.setText(f"Usa a chave de {p.rotulo}: {self.cfg.mascara(efetivo)}")
+        self.caixa_voz.setVisible(escolhido == "groq")
+        self.btn_apagar_voz.setEnabled(self.cfg.tem_chave("groq"))
+        self.campo_chave_voz.clear()
+        self._acomodar()
+
+    def _acomodar(self):
+        """Os textos explicativos mudam de tamanho conforme a escolha: a janela cresce junto, para nada ficar cortado."""
+        self.layout().activate()
+        self.resize(self.width(), max(self.height(), self.layout().totalHeightForWidth(self.width())))
+
+    def salvar_chave_voz(self):
+        try:
+            self.cfg.salvar_chave("groq", self.campo_chave_voz.text())
+        except ErroIA as e:
+            self.status.setText(str(e))
+            return
+        self.status.setText("Chave da voz salva.")
+        self._atualizar_voz()
+
+    def apagar_chave_voz(self):
+        self.cfg.apagar_chave("groq")
+        self.status.setText("Chave da voz apagada.")
+        self._atualizar_voz()
+
     def _atualizar(self):
         p = PROVEDORES[self.provedor]
         self.info.setText(f"{p.custo}\nOnde criar a chave: {p.onde_chave}")
@@ -166,6 +239,7 @@ class DialogoIA(QDialog):
         self.campo_modelo.setPlaceholderText(p.modelo_padrao)
         self.campo_modelo.setText(self.cfg.modelo_personalizado(self.provedor))
         self.campo_chave.clear()
+        self._atualizar_voz()                       # também reacomoda a janela
 
     def salvar_chave(self):
         try:
@@ -668,10 +742,11 @@ class PaginaIA(QWidget):
     def comecar_gravacao(self) -> bool:
         if self.ocupado or self.transcrevendo or self.gravador.gravando:
             return False
-        prov = PROVEDORES[self.servico.ia.ativo]
-        if not prov.voz:
-            self.status.setText(f"{prov.rotulo} não transcreve voz. Troque para Gemini ou ChatGPT em Configurar IA, "
-                                "ou use o ditado do Windows (tecla Windows + H) na caixa de texto.")
+        if self.servico.ia.provedor_voz() is None:
+            prov = PROVEDORES[self.servico.ia.ativo]
+            self.status.setText(f"{prov.rotulo} não transcreve voz. Em Configurar IA, na seção de voz, escolha "
+                                "Gemini, ChatGPT ou Groq, ou use o ditado do Windows (tecla Windows + H) na caixa "
+                                "de texto.")
             return False
         try:
             self.gravador.iniciar()
@@ -708,7 +783,7 @@ class PaginaIA(QWidget):
             self.status.setText("Não ouvi nada. Tente de novo.")
             return
         wav = wav_de_pcm16(pcm)
-        pedido = self.servico.ia.pedido()
+        pedido = self.servico.ia.pedido(self.servico.ia.provedor_voz())
         self.transcrevendo = True
         self.btn_voz.setEnabled(False)
         self.status.setText("Transcrevendo o que você falou...")

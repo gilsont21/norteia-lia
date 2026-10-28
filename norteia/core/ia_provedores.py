@@ -1,4 +1,4 @@
-"""Provedores de IA do assistente: Gemini, Claude, ChatGPT (OpenAI) e DeepSeek.
+"""Provedores de IA do assistente: Gemini, Claude, ChatGPT (OpenAI) e DeepSeek (e Groq, só para transcrever voz).
 
 Cada provedor tem um jeito próprio de receber mensagens e "ferramentas" (funções que a IA pode pedir para rodar).
 Aqui tudo é convertido para um formato neutro, então o resto do app não sabe qual IA está do outro lado.
@@ -47,24 +47,32 @@ class Provedor:
     le_imagem: bool = True
     le_pdf: bool = True
     voz: str = ""           # como transcreve áudio: "gemini", "openai" ou "" (não transcreve)
+    modelo_voz: str = ""    # modelo usado na transcrição quando o formato é "openai" (o Gemini usa o modelo do chat)
+    idioma_voz: bool = True  # manda "language=pt" junto (o gpt-transcribe detecta sozinho e não usa esse campo)
+    so_voz: bool = False    # só transcreve voz: não aparece na lista de IAs do chat
 
 
 # Os nomes de modelo mudam com o tempo: cada um pode ser trocado no campo "Modelo" (avançado) da tela.
 PROVEDORES: dict[str, Provedor] = {p.chave: p for p in (
-    Provedor("gemini", "Gemini (Google)", "gemini-2.5-flash", "gemini",
+    Provedor("gemini", "Gemini (Google)", "gemini-3.8-flash", "gemini",
              "https://generativelanguage.googleapis.com/v1beta",
              "Tem camada gratuita com limites. Na camada gratuita o Google pode usar o conteúdo enviado para "
              "melhorar os produtos dele.",
              "aistudio.google.com (Get API key)", voz="gemini"),
-    Provedor("claude", "Claude (Anthropic)", "claude-sonnet-4-5", "claude", "https://api.anthropic.com/v1",
+    Provedor("claude", "Claude (Anthropic)", "claude-haiku-5-5", "claude", "https://api.anthropic.com/v1",
              "Cobrado por uso, à parte da assinatura do chat. Precisa de créditos na conta de API.",
              "console.anthropic.com (API keys)"),
     Provedor("openai", "ChatGPT (OpenAI)", "gpt-4o-mini", "openai", "https://api.openai.com/v1",
              "Cobrado por uso, à parte da assinatura do ChatGPT. Precisa de créditos na conta de API.",
-             "platform.openai.com (API keys)", voz="openai"),
-    Provedor("deepseek", "DeepSeek", "deepseek-chat", "openai", "https://api.deepseek.com",
+             "platform.openai.com (API keys)", voz="openai", modelo_voz="gpt-transcribe", idioma_voz=False),
+    Provedor("deepseek", "DeepSeek", "deepseek-flash", "openai", "https://api.deepseek.com",
              "Cobrado por uso (costuma ser barato). Confira os preços no site do provedor.",
-             "platform.deepseek.com (API keys)", le_imagem=False, le_pdf=False),
+             "platform.deepseek.com (API keys)", le_imagem=True, le_pdf=False),
+    Provedor("groq", "Groq (só voz)", "whisper-large-v3-turbo", "openai", "https://api.groq.com/openai/v1",
+             "Só transcreve a sua fala (Whisper). Tem camada gratuita com limites; fora dela, o custo é de centavos "
+             "por hora de áudio.",
+             "console.groq.com (API Keys)", le_imagem=False, le_pdf=False, voz="openai",
+             modelo_voz="whisper-large-v3-turbo", so_voz=True),
 )}
 PROVEDOR_PADRAO = "gemini"
 
@@ -103,8 +111,8 @@ class ConfigIA:
         return v if v in PROVEDORES else PROVEDOR_PADRAO
 
     def definir_ativo(self, provedor: str) -> None:
-        if provedor not in PROVEDORES:
-            raise ValueError(f"provedor desconhecido: {provedor}")
+        if provedor not in PROVEDORES or PROVEDORES[provedor].so_voz:
+            raise ValueError(f"provedor desconhecido ou só de voz: {provedor}")
         self.banco.definir_meta("ia_provedor", provedor)
 
     def modelo(self, provedor: str | None = None) -> str:
@@ -171,8 +179,31 @@ class ConfigIA:
         if texto.strip() and texto.strip() not in atuais:
             self.definir_preferencias(atuais + [texto.strip()])
 
-    def pedido(self) -> "Pedido":
-        p = self.ativo
+    # ---- voz: quem transcreve a fala (pode ser diferente da IA do chat)
+    @property
+    def voz_escolhida(self) -> str:
+        v = self.banco.meta("ia_voz", "") or ""
+        return v if v in PROVEDORES and PROVEDORES[v].voz else ""
+
+    def definir_voz(self, provedor: str) -> None:
+        """Texto vazio = automático."""
+        if provedor and not (provedor in PROVEDORES and PROVEDORES[provedor].voz):
+            raise ValueError(f"esse provedor não transcreve voz: {provedor}")
+        self.banco.definir_meta("ia_voz", provedor)
+
+    def provedor_voz(self) -> str | None:
+        """A escolha da pessoa; senão a IA do chat, se ela transcreve; senão a primeira que tem chave salva."""
+        if self.voz_escolhida:
+            return self.voz_escolhida
+        if PROVEDORES[self.ativo].voz:
+            return self.ativo
+        for chave, p in PROVEDORES.items():
+            if p.voz and self.tem_chave(chave):
+                return chave
+        return None
+
+    def pedido(self, provedor: str | None = None) -> "Pedido":
+        p = provedor or self.ativo
         return Pedido(p, self.modelo(p), self.chave_para_uso(p), self.enviar_notas, self.preferencias)
 
 
@@ -461,14 +492,14 @@ PROMPT_TRANSCRICAO = ("Transcreva fielmente o áudio em português do Brasil. Re
 
 def transcrever(pedido: Pedido, wav: bytes, transporte=transporte_http, transporte_arquivo=transporte_multipart,
                 pausar=_tempo.sleep) -> str:
-    """Voz para texto usando a IA escolhida. Só Gemini e ChatGPT aceitam áudio."""
+    """Voz para texto. Só Gemini, ChatGPT e Groq aceitam áudio."""
     import base64  # noqa: PLC0415
     prov = PROVEDORES.get(pedido.provedor)
     if prov is None:
         raise ErroIA("Escolha uma IA nas configurações.")
     if not prov.voz:
-        raise ErroIA(f"{prov.rotulo} não transcreve voz. Troque para Gemini ou ChatGPT em Configurações de IA, "
-                     "ou use o ditado do Windows (tecla Windows + H) na caixa de texto.")
+        raise ErroIA(f"{prov.rotulo} não transcreve voz. Escolha Gemini, ChatGPT ou Groq na seção Voz das "
+                     "Configurações de IA, ou use o ditado do Windows (tecla Windows + H) na caixa de texto.")
     if not pedido.chave:
         raise ErroIA(f"Falta a chave de {prov.rotulo}. Cole a chave em Configurações de IA.")
     if prov.voz == "gemini":
@@ -480,8 +511,10 @@ def transcrever(pedido: Pedido, wav: bytes, transporte=transporte_http, transpor
     cab = {"authorization": f"Bearer {pedido.chave}"}
     for tentativa in range(len(PAUSAS_ENTRE_TENTATIVAS) + 1):
         try:
-            dados = transporte_arquivo(url, cab, {"model": "whisper-1", "language": "pt"},
-                                       ("file", "voz.wav", wav, "audio/wav"))
+            campos = {"model": prov.modelo_voz}
+            if prov.idioma_voz:
+                campos["language"] = "pt"
+            dados = transporte_arquivo(url, cab, campos, ("file", "voz.wav", wav, "audio/wav"))
             break
         except ErroHTTP as e:
             if e.codigo not in TEMPORARIOS or tentativa >= len(PAUSAS_ENTRE_TENTATIVAS):

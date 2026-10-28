@@ -4,7 +4,7 @@ Gerenciador de tarefas para desktop, com calendário, assistente de IA integrado
 
 Criado por Gilson Tavares da Silva para a **LIA, Liga de Inteligência Artificial**. Projeto em desenvolvimento, versão 0.7.
 
-> **English summary:** Norteia Lia is a local-first desktop task manager (Python, PySide6, SQLite) with a full calendar, Google Calendar two-way sync and an AI assistant that reads your tasks and proposes changes as a reviewable plan (apply, then undo). The AI layer is provider-agnostic (Gemini, Claude, ChatGPT, DeepSeek), accepts files and voice, and has 447 automated tests behind it. Source is visible for evaluation only (see `LICENSE`).
+> **English summary:** Norteia Lia is a local-first desktop task manager (Python, PySide6, SQLite) with a full calendar, Google Calendar two-way sync and an AI assistant that reads your tasks and proposes changes as a reviewable plan (apply, then undo). The AI layer is provider-agnostic (Gemini, Claude, ChatGPT, DeepSeek), accepts files and voice (Gemini, ChatGPT or Groq transcription), and has 453 automated tests behind it. Source is visible for evaluation only (see `LICENSE`).
 
 ## Como ficou
 
@@ -34,7 +34,7 @@ As capturas usam dados de demonstração e respostas simuladas da IA.
 **Assistente de IA**
 - Chat que lê tarefas, agenda e estatísticas e propõe mudanças em um **plano**. Nada muda até clicar em "Aplicar tudo", e há "Desfazer".
 - Provedores intercambiáveis: Gemini, Claude, ChatGPT e DeepSeek, cada um com a sua chave, guardada no cofre do sistema e exibida só mascarada.
-- Anexos (imagem, PDF, Word, texto) e voz com transcrição, respeitando o que cada provedor aceita.
+- Anexos (imagem, PDF, Word, texto) e voz com transcrição, respeitando o que cada provedor aceita. A voz tem escolha própria (Gemini, ChatGPT ou Groq), então dá para conversar com o Claude e transcrever com outro provedor.
 
 **Sincronização entre aparelhos**
 - Servidor próprio e pequeno (FastAPI) que guarda uma cópia; conflitos resolvidos pela edição mais recente; funciona offline.
@@ -70,7 +70,7 @@ No Windows, sem terminal: `windows\1-abrir-sem-instalar.bat`. Para gerar o execu
 
 ## Testes e capturas
 
-    python -m pytest                       # 447 testes
+    python -m pytest                       # 453 testes
     python tools/capturar.py capturas      # telas principais, com dados de demonstração
     python tools/capturar_extras.py capturas   # IA, calendário e integrações
 

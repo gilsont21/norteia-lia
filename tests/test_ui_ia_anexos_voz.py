@@ -120,13 +120,25 @@ def test_arquivo_nao_suportado_mostra_mensagem(janela, tmp_path):
     assert "Ainda não sei ler" in p.status.text() and p.anexos == []
 
 
-def test_deepseek_recusa_imagem_com_aviso(janela):
+def test_deepseek_aceita_imagem(janela):
+    p = pagina(janela, "deepseek")
+    p.adicionar_anexo(Anexo("a.png", "image/png", dados=png_bytes()))
+    assert [a.nome for a in p.anexos] == ["a.png"]
+
+
+def test_ia_que_nao_le_imagem_recusa_com_aviso(janela, monkeypatch):
+    from dataclasses import replace
+    import norteia.core.ia_provedores as provs
+    monkeypatch.setitem(provs.PROVEDORES, "deepseek", replace(provs.PROVEDORES["deepseek"], le_imagem=False))
     p = pagina(janela, "deepseek")
     with pytest.raises(ErroIA, match="não lê imagens"):
         p.adicionar_anexo(Anexo("a.png", "image/png", dados=png_bytes()))
 
 
-def test_trocar_para_ia_sem_imagem_barra_o_envio_com_anexo(janela):
+def test_trocar_para_ia_sem_imagem_barra_o_envio_com_anexo(janela, monkeypatch):
+    from dataclasses import replace
+    import norteia.core.ia_provedores as provs
+    monkeypatch.setitem(provs.PROVEDORES, "deepseek", replace(provs.PROVEDORES["deepseek"], le_imagem=False))
     p = pagina(janela)
     p.adicionar_anexo(Anexo("a.png", "image/png", dados=png_bytes()))
     janela.servico.ia.salvar_chave("deepseek", "chave-deepseek-123")
@@ -266,8 +278,23 @@ def test_voz_com_chatgpt_manda_arquivo_para_whisper(janela):
     p.comecar_gravacao()
     FonteFalsa.instancias[-1].receber(pcm_seno(0.5))
     p.terminar_gravacao()
-    assert chamadas[0][0].endswith("/audio/transcriptions") and chamadas[0][1]["language"] == "pt"
+    assert chamadas[0][0].endswith("/audio/transcriptions") and chamadas[0][1]["model"] == "gpt-transcribe"
     assert p.entrada.toPlainText() == "oi pessoal"
+
+
+def test_voz_com_groq_enquanto_o_chat_usa_claude(janela):
+    FonteFalsa.instancias.clear()
+    p = pagina(janela, "claude")
+    janela.servico.ia.salvar_chave("groq", "chave-groq-123456")
+    janela.servico.ia.definir_voz("groq")
+    p.gravador.fabrica = FonteFalsa
+    chamadas = []
+    p.transporte_arquivo = lambda url, cab, campos, arq: (chamadas.append((url, campos)) or {"text": "marcar dentista"})
+    assert p.comecar_gravacao()
+    FonteFalsa.instancias[-1].receber(pcm_seno(0.5))
+    p.terminar_gravacao()
+    assert chamadas[0][0].startswith("https://api.groq.com/") and chamadas[0][1]["language"] == "pt"
+    assert p.entrada.toPlainText() == "marcar dentista" and p.transporte.pedidos == []   # o chat não foi chamado
 
 
 def test_onda_sobe_com_voz_alta_e_desce_no_silencio(app):
