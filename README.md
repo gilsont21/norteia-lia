@@ -1,10 +1,10 @@
 # Norteia Lia
 
-Gerenciador de tarefas para desktop, com calendário, assistente de IA integrado e sincronização com o Google Calendar. Feito em Python (PySide6 + SQLite), com tema escuro, funcionando offline e com os dados na máquina da pessoa.
+Gerenciador de tarefas para desktop, com calendário, assistente de IA integrado e sincronização com o Google Calendar. Feito em Python (PySide6 + SQLite), com temas claro e escuro, funcionando offline e com os dados na máquina da pessoa.
 
 Criado por Gilson Tavares da Silva para a **LIA, Liga de Inteligência Artificial**. Projeto em desenvolvimento, versão 0.7.
 
-> **English summary:** Norteia Lia is a local-first desktop task manager (Python, PySide6, SQLite) with a full calendar, Google Calendar two-way sync and an AI assistant that reads your tasks and proposes changes as a reviewable plan (apply, then undo). The AI layer is provider-agnostic (Gemini, Claude, ChatGPT, DeepSeek), accepts files and voice (Gemini, ChatGPT or Groq transcription), and has 453 automated tests behind it. Source is visible for evaluation only (see `LICENSE`).
+> **English summary:** Norteia Lia is a local-first desktop task manager (Python, PySide6, SQLite) with a full calendar, Google Calendar two-way sync and an AI assistant that reads your tasks and proposes changes as a reviewable plan (apply, then undo). The AI layer is provider-agnostic (Gemini, Claude, ChatGPT, DeepSeek), accepts files and voice (Gemini, ChatGPT or Groq transcription), and has 504 automated tests behind it. Source is visible for evaluation only (see `LICENSE`).
 
 ## Como ficou
 
@@ -14,6 +14,7 @@ Criado por Gilson Tavares da Silva para a **LIA, Liga de Inteligência Artificia
 | ![Assistente propondo e aplicando um plano](docs/imagens/ia-plano.png) | ![Anexos e voz no chat](docs/imagens/ia-anexos-e-voz.png) |
 | ![Kanban](docs/imagens/kanban.png) | ![Matriz de Eisenhower](docs/imagens/matriz-eisenhower.png) |
 | ![Estatísticas](docs/imagens/estatisticas.png) | ![Google Calendar](docs/imagens/google-calendar.png) |
+| ![Configurações: aparência](docs/imagens/aparencia.png) | ![Tema escuro com fundo de inverno](docs/imagens/tema-escuro-fundo.png) |
 
 As capturas usam dados de demonstração e respostas simuladas da IA.
 
@@ -25,6 +26,7 @@ As capturas usam dados de demonstração e respostas simuladas da IA.
 - Datas em linguagem natural ("depois de amanhã", "dia 15"), repetição personalizada, lembretes (inclusive constantes até concluir) e janela de aviso com Concluir e Adiar.
 - Foco (Pomodoro e cronômetro), hábitos, contagem regressiva e estatísticas.
 - Bandeja do sistema, início com o Windows e atalho global para criar tarefa rápida.
+- Aparência personalizável: modo claro, escuro ou o do sistema, dez cores de tema e fundos ilustrados de estações do ano (desenhados em código), com troca na hora. A janela de Configurações tem menu lateral e grava cada ajuste ao mexer.
 
 **Calendário**
 - Dia, semana, mês, ano, agenda, multidia e multisemana, com arrastar e esticar para mudar horário e duração.
@@ -70,9 +72,10 @@ No Windows, sem terminal: `windows\1-abrir-sem-instalar.bat`. Para gerar o execu
 
 ## Testes e capturas
 
-    python -m pytest                       # 453 testes
+    python -m pytest                       # 504 testes
     python tools/capturar.py capturas      # telas principais, com dados de demonstração
     python tools/capturar_extras.py capturas   # IA, calendário e integrações
+    python tools/capturar_tema.py capturas     # temas, fundos e janela de Configurações
 
 ## Documentação
 

@@ -90,10 +90,10 @@ class FaixaSemana(QWidget):
                 p.drawLine(QPointF(c.x() - 1, c.y() + 3.5), QPointF(c.x() + 4.5, c.y() - 3))
             elif not h.agendado(d):
                 p.setPen(Qt.NoPen)
-                p.setBrush(QColor("#3a3a3a"))
+                p.setBrush(QColor(tema.atual.barra_rolagem))
                 p.drawEllipse(c, 2, 2)
             else:
-                cor = QColor(h.cor) if d == self.hoje else QColor("#4d4d4d")
+                cor = QColor(h.cor) if d == self.hoje else QColor(tema.atual.sutil)
                 p.setBrush(Qt.NoBrush)
                 p.setPen(QPen(cor, 1.6))
                 p.drawEllipse(c, raio, raio)
@@ -299,7 +299,7 @@ class MesHabito(QWidget):
                 p.drawEllipse(c)
                 p.setPen(QColor(pal.texto))
             else:
-                p.setPen(QColor("#4d4d4d" if estado == "livre" else pal.apagado))
+                p.setPen(QColor(pal.sutil if estado == "livre" else pal.apagado))
             p.drawText(c, Qt.AlignCenter, str(dia.day))
         p.end()
 

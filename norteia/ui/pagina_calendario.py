@@ -1036,7 +1036,7 @@ class VistaAno(QWidget):
                 d = ini + timedelta(days=i)
                 r = QRectF(x0 + (i % 7) * cw, y0 + 26 + (i // 7 + 1) * ch, cw, ch)
                 if d.month != m + 1:
-                    p.setPen(QColor("#4a4a4a"))
+                    p.setPen(QColor(tema.atual.sutil))
                     p.setFont(_fonte(base, 10))
                     p.drawText(r, Qt.AlignCenter, str(d.day))
                     continue

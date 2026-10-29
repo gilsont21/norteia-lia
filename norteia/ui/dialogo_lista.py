@@ -408,12 +408,12 @@ class DialogoLista(QDialog):
         self.btn_ok.setEnabled(bool(self.nome.text().strip()))
         pal = tema.atual
         if self.btn_ok.isEnabled():
-            self.btn_ok.setStyleSheet(f"QPushButton {{ background: {pal.destaque}; color: white; border: none; "
-                                      f"border-radius: 6px; font-weight: 600; }} "
-                                      f"QPushButton:hover {{ background: #5a82ff; }}")
+            self.btn_ok.setStyleSheet(f"QPushButton {{ background: {pal.destaque}; color: {pal.sobre_destaque}; "
+                                      f"border: none; border-radius: 6px; font-weight: 600; }} "
+                                      f"QPushButton:hover {{ background: {pal.destaque_hover}; }}")
         else:
-            self.btn_ok.setStyleSheet("QPushButton { background: #2b3a66; color: #7f8cb0; border: none; "
-                                      "border-radius: 6px; }")
+            self.btn_ok.setStyleSheet(f"QPushButton {{ background: {pal.barra_ativa}; color: {pal.apagado}; "
+                                      "border: none; border-radius: 6px; }")
 
     def _abrir_emojis(self):
         s = SeletorEmoji(self)

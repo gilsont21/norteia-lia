@@ -49,8 +49,8 @@ QFrame#flutuante QLineEdit#semBorda, QFrame#flutuante QPlainTextEdit#semBorda {{
 }}
 QFrame#flutuante QPushButton#plano {{ background: transparent; border: none; padding: 4px 6px; border-radius: 6px; }}
 QFrame#flutuante QPushButton#plano:hover {{ background: {p.barra_hover}; border: none; }}
-QFrame#flutuante QPushButton#ok {{ background: {p.destaque}; border: none; color: white; font-weight: 600; }}
-QFrame#flutuante QPushButton#ok:hover {{ background: #5a82ff; border: none; }}
+QFrame#flutuante QPushButton#ok {{ background: {p.destaque}; border: none; color: {p.sobre_destaque}; font-weight: 600; }}
+QFrame#flutuante QPushButton#ok:hover {{ background: {p.destaque_hover}; border: none; }}
 QFrame#flutuante QPushButton#aba {{ background: transparent; border: none; border-radius: 6px; padding: 5px 10px;
     color: {p.apagado}; font-size: 12px; }}
 QFrame#flutuante QPushButton#aba:checked {{ background: {p.barra_ativa}; color: {p.texto}; }}
@@ -249,7 +249,7 @@ class GradeDias(QWidget):
                 elif d.month == self.mes.month:
                     p.setPen(QColor(pal.texto))
                 else:
-                    p.setPen(QColor("#5a5a5a"))
+                    p.setPen(QColor(pal.sutil))
             p.setFont(f)
             p.drawText(r, Qt.AlignCenter, str(d.day))
         p.end()

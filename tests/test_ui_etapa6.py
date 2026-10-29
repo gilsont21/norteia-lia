@@ -324,13 +324,18 @@ def test_preferencias_sao_salvas(app):
     assert salvo == {"resumo_diario": False, "resumo_hora": "07:30"}
 
 
-def test_dialogo_de_configuracoes(app):
-    from norteia.ui.dialogos import DialogoConfiguracoes
-    d = DialogoConfiguracoes(None, {"aviso_na_tela": False, "resumo_diario": True, "resumo_hora": "07:15",
-                                    "fechar_para_bandeja": False})
-    assert d.resultado() == {"aviso_na_tela": False, "fechar_para_bandeja": False,
-                             "iniciar_com_windows": False, "resumo_diario": True, "resumo_hora": "07:15",
-                             "semana_comeca_segunda": False, "claude_api_key": "", "claude_modelo": ""}
+def test_janela_de_configuracoes_grava_na_hora(app):
+    from norteia.ui.configuracoes import JanelaConfiguracoes
+    salvo = {}
+    j = JanelaPrincipal(Servico(Banco(":memory:")), prefs={"resumo_hora": "07:15"}, ao_salvar_prefs=lambda p: salvo.update(p))
+    d = JanelaConfiguracoes(j, "notificacoes")
+    assert d.pilha.currentIndex() == 1
+    assert d.hora_resumo.time().toString("HH:mm") == "07:15"
+    d.sw_aviso.setChecked(False)
+    d.sw_resumo.setChecked(False)
+    d.hora_resumo.setTime(d.hora_resumo.time().addSecs(15 * 60))
+    assert j.prefs["aviso_na_tela"] is False and j.prefs["resumo_diario"] is False
+    assert j.prefs["resumo_hora"] == "07:30" and salvo["resumo_hora"] == "07:30"
 
 
 # ---------- bandeja do sistema e abrir com o Windows ----------

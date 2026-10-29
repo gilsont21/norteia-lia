@@ -5,7 +5,7 @@ from datetime import date, datetime, time, timedelta
 
 from PySide6.QtCore import (QCoreApplication, QDate, QObject, QRect, QRunnable, QSize, QThreadPool, QTime, QTimer, Qt,
                             QUrl, Signal)
-from PySide6.QtGui import QColor, QDesktopServices, QIcon, QCursor, QKeySequence, QPainter, QPen, QPixmap, QShortcut
+from PySide6.QtGui import QColor, QDesktopServices, QGuiApplication, QIcon, QCursor, QKeySequence, QPainter, QPen, QPixmap, QShortcut
 from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox, QDateEdit, QFileDialog, QFrame, QHBoxLayout,
                                QInputDialog, QLabel, QLineEdit, QListWidget,
                                QListWidgetItem, QMainWindow, QMenu, QMessageBox, QPlainTextEdit,
@@ -18,7 +18,9 @@ from ..core import lembretes as lembretes_core
 from ..core.servico import MAX_NIVEIS, PREFIXO_FILTRO, PREFIXO_TAG
 from .. import autostart
 from ..marca import NOME
-from . import icones, tema
+from . import icones, retema, tema
+from .configuracoes import JanelaConfiguracoes
+from .estacoes import ComFundo
 from .aviso import OPCOES_SONECA, GerenteAvisos
 from ..core import ia, ia_provedores
 from ..core.foco import formatar_duracao
@@ -26,7 +28,7 @@ from .atalho_global import JanelaRapida
 from .busca_flutuante import PainelBusca
 from .dialogo_google import DialogoGoogle, DialogoIntegracoes, GerenteGoogle
 from .dialogo_lista import SEM_COR, DialogoLista
-from .dialogos import (DialogoAssinaturas, DialogoConfiguracoes, DialogoDados, DialogoFiltro, DialogoRepeticao,
+from .dialogos import (DialogoAssinaturas, DialogoDados, DialogoFiltro, DialogoRepeticao,
                        DialogoSincronizacao)
 from .pagina_calendario import PaginaCalendario
 from .popovers import CartaoTarefa
@@ -758,6 +760,7 @@ class JanelaPrincipal(QMainWindow):
         super().__init__()
         self.servico = servico
         self.prefs = prefs if prefs is not None else {}
+        tema.da_preferencia(self.prefs)
         self._ao_salvar_prefs = ao_salvar_prefs
         self._notificador_proprio = notificador is not None
         self._saindo = False
@@ -855,9 +858,10 @@ class JanelaPrincipal(QMainWindow):
         horizontal.addWidget(self.barra_caixa)
 
         # centro
-        centro = QWidget()
+        centro = ComFundo()
         centro.setObjectName("centro")
-        centro.setAttribute(Qt.WA_StyledBackground, True)
+        self.centro = centro
+        centro.definir_estacao(str(self.prefs.get("tema_fundo") or ""), tema.atual.escuro)
         lay_c = QVBoxLayout(centro)
         lay_c.setContentsMargins(22, 18, 22, 12)
         lay_c.setSpacing(0)
@@ -997,6 +1001,10 @@ class JanelaPrincipal(QMainWindow):
         QShortcut(QKeySequence("F1"), self, activated=self.mostrar_atalhos)
 
         self.setWindowIcon(icone_do_app())
+        try:
+            QGuiApplication.styleHints().colorSchemeChanged.connect(self._ao_mudar_esquema_do_sistema)
+        except Exception:
+            pass
         self.atualizar()
 
         # lembretes: confere de tempos em tempos e ao abrir
@@ -1098,7 +1106,7 @@ class JanelaPrincipal(QMainWindow):
         b = QPushButton()
         b.setObjectName("btnTrilho")
         b.setFixedSize(44, 44)
-        b.setIcon(icones.icone(nome, pal.texto if ativo else "#4d4d4d", 24))
+        b.setIcon(icones.icone(nome, pal.texto if ativo else pal.sutil, 24))
         b.setIconSize(QSize(24, 24))
         b.setToolTip(dica)
         b.setEnabled(ativo)
@@ -1106,18 +1114,14 @@ class JanelaPrincipal(QMainWindow):
         return b
 
     @staticmethod
-    def _botao_avatar(nome: str) -> QPushButton:
-        """Bolinha com a inicial do nome."""
+    def _icone_avatar(nome: str) -> QIcon:
         pal = tema.atual
-        b = QPushButton()
-        b.setObjectName("btnAvatar")
-        b.setFixedSize(36, 36)
         pm = QPixmap(72, 72)
         pm.fill(Qt.transparent)
         p = QPainter(pm)
         p.setRenderHint(QPainter.Antialiasing)
         p.setPen(Qt.NoPen)
-        p.setBrush(QColor("#4d4d4d"))
+        p.setBrush(QColor(pal.sutil))
         p.drawEllipse(0, 0, 72, 72)
         p.setPen(QColor(pal.texto))
         f = p.font()
@@ -1127,7 +1131,15 @@ class JanelaPrincipal(QMainWindow):
         p.drawText(pm.rect(), Qt.AlignCenter, (nome.strip()[:1] or "G").upper())
         p.end()
         pm.setDevicePixelRatio(2)
-        b.setIcon(QIcon(pm))
+        return QIcon(pm)
+
+    @staticmethod
+    def _botao_avatar(nome: str) -> QPushButton:
+        """Bolinha com a inicial do nome."""
+        b = QPushButton()
+        b.setObjectName("btnAvatar")
+        b.setFixedSize(36, 36)
+        b.setIcon(JanelaPrincipal._icone_avatar(nome))
         b.setIconSize(QSize(36, 36))
         b.setStyleSheet("QPushButton#btnAvatar { background: transparent; border: none; padding: 0; }")
         b.setToolTip("Conta e configurações")
@@ -1259,17 +1271,35 @@ class JanelaPrincipal(QMainWindow):
         else:
             self.servico.adiar(tarefa_id, minutos)
 
-    def abrir_configuracoes(self):
-        dlg = DialogoConfiguracoes(self, self.prefs)
-        if dlg.exec() == QDialog.Accepted:
-            self.aplicar_preferencias(dlg.resultado())
+    def abrir_configuracoes(self, secao: str = ""):
+        dlg = JanelaConfiguracoes(self, secao)
+        dlg.exec()
 
     def aplicar_preferencias(self, novas: dict):
         self.prefs.update(novas)
         if "iniciar_com_windows" in novas:
             self._autostart.definir(bool(novas["iniciar_com_windows"]))
+        if any(k.startswith("tema_") for k in novas):
+            self.aplicar_tema()
         if self._ao_salvar_prefs is not None:
             self._ao_salvar_prefs(self.prefs)
+
+    def aplicar_tema(self):
+        """Troca cores, modo e fundo agora, sem reiniciar."""
+        antiga = tema.atual
+        nova = tema.da_preferencia(self.prefs)
+        self.centro.definir_estacao(str(self.prefs.get("tema_fundo") or ""), nova.escuro)
+        if nova.nome == antiga.nome:
+            return
+        self.setStyleSheet(tema.qss())
+        retema.retemar(self, tema.mapa_de_cores(antiga, nova))
+        self.btn_avatar.setIcon(self._icone_avatar(str(self.prefs.get("nome_usuario") or "G")))
+        self.atualizar(manter_selecao=True)
+        self.update()
+
+    def _ao_mudar_esquema_do_sistema(self, *_):
+        if (self.prefs.get("tema_modo") or tema.MODO_PADRAO) == "sistema":
+            self.aplicar_tema()
 
     def mostrar_atalhos(self):
         texto = "\n".join(f"{tecla:<18} {descricao}" for tecla, descricao in ATALHOS)

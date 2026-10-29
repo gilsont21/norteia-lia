@@ -5,6 +5,11 @@ from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPainterPath, QPen, QPixmap
 
 
+def _tema():
+    from . import tema
+    return tema.atual
+
+
 def _caneta(cor, largura=1.6):
     return QPen(QColor(cor), largura, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
 
@@ -95,7 +100,7 @@ def desenhar(p: QPainter, nome: str, r: QRectF, cor: str, texto: str = "") -> No
         p.setBrush(QColor(cor))
         p.drawRoundedRect(R(3, 3, 14, 14), 3.5 * u, 3.5 * u)
         p.setBrush(Qt.NoBrush)
-        p.setPen(_caneta("#181818", 2))
+        p.setPen(_caneta(_tema().trilho, 2))
         p.drawPolyline([P(6.6, 10.3), P(9, 12.7), P(13.4, 7.6)])
     elif nome == "matriz":
         for a, b in ((3, 3), (11, 3), (3, 11), (11, 11)):
@@ -308,6 +313,26 @@ def desenhar(p: QPainter, nome: str, r: QRectF, cor: str, texto: str = "") -> No
     elif nome == "avatar":
         p.drawEllipse(R(7, 3.5, 6, 6))
         p.drawArc(R(3.5, 11, 13, 10), 0, 180 * 16)
+    elif nome == "paleta":
+        p.drawEllipse(R(2.5, 2.5, 15, 15))
+        p.setBrush(QColor(cor))
+        for a, b in ((6.2, 8), (9, 5.6), (12.4, 6.6), (13.2, 10.6)):
+            p.drawEllipse(R(a - 1, b - 1, 2, 2))
+    elif nome == "teclado":
+        p.drawRoundedRect(R(2, 5, 16, 10), 2.5 * u, 2.5 * u)
+        for xx in (5.5, 8.5, 11.5, 14.5):
+            p.drawPoint(P(xx, 8.3))
+        p.drawLine(P(6, 12), P(14, 12))
+    elif nome == "info":
+        p.drawEllipse(R(2.5, 2.5, 15, 15))
+        p.drawLine(P(10, 9), P(10, 14))
+        p.drawPoint(P(10, 6.4))
+    elif nome == "plug":
+        p.drawLine(P(7.5, 3), P(7.5, 7))
+        p.drawLine(P(12.5, 3), P(12.5, 7))
+        p.drawRoundedRect(R(5, 7, 10, 5), 1.5 * u, 1.5 * u)
+        p.drawLine(P(10, 12), P(10, 15))
+        p.drawArc(R(6, 11, 8, 6), 180 * 16, 180 * 16)
     p.restore()
 
 

@@ -88,7 +88,7 @@ class DelegadoTarefa(QStyledItemDelegate):
         quad = QRectF(caixa).adjusted(1, 1, -1, -1)
         cor_prio = QColor(pal.prioridade[int(t.prioridade)])
         if t.descartada and not t.concluida:
-            p.setPen(QPen(QColor("#5c5c5c"), 1.6))
+            p.setPen(QPen(QColor(pal.caixa), 1.6))
             p.setBrush(Qt.NoBrush)
             p.drawRoundedRect(quad, 4, 4)
             c = quad.center()
@@ -96,7 +96,7 @@ class DelegadoTarefa(QStyledItemDelegate):
             p.drawLine(QPointF(c.x() + 3.5, c.y() - 3.5), QPointF(c.x() - 3.5, c.y() + 3.5))
         elif t.concluida:
             p.setPen(Qt.NoPen)
-            p.setBrush(QColor("#5c5c5c"))
+            p.setBrush(QColor(pal.caixa))
             p.drawRoundedRect(quad, 4, 4)
             p.setPen(QPen(QColor("#ffffff"), 1.8, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
             c = quad.center()

@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDateEdit, QDialog, QDialog
                                QMessageBox, QPushButton, QRadioButton, QSpinBox, QTimeEdit, QVBoxLayout, QWidget)
 
 from .. import autostart
+from . import tema
 from ..core import Filtro, filtros, recorrencia
 from ..core import exportacao
 from ..core.assinaturas import CORES as CORES_ASSINATURA
@@ -55,9 +56,9 @@ class SeletorCor(QWidget):
         self._cor = cor
         for c, b in self.botoes.items():
             b.setChecked(c == cor)
-            borda = "#ffffff" if c == cor else "transparent"
+            borda = tema.atual.texto if c == cor else "transparent"
             b.setStyleSheet(f"QPushButton {{ background: {c}; border: 2px solid {borda}; border-radius: 12px; "
-                            f"padding: 0; }} QPushButton:hover {{ border: 2px solid #ffffff; }}")
+                            f"padding: 0; }} QPushButton:hover {{ border: 2px solid {tema.atual.texto}; }}")
 
     def cor(self) -> str:
         return self._cor
@@ -97,8 +98,8 @@ class DialogoRepeticao(QDialog):
             b.setCheckable(True)
             b.setChecked(i in base["dias"])
             b.setCursor(Qt.PointingHandCursor)
-            b.setStyleSheet("QPushButton { padding: 6px 4px; } QPushButton:checked { background: #4772fa; "
-                            "border: 1px solid #4772fa; color: white; }")
+            b.setStyleSheet(f"QPushButton {{ padding: 6px 4px; }} QPushButton:checked {{ background: {tema.atual.destaque}; "
+                            f"border: 1px solid {tema.atual.destaque}; color: {tema.atual.sobre_destaque}; }}")
             self.dias.append(b)
             h.addWidget(b)
         lay.addWidget(self.dias_w)
@@ -219,8 +220,9 @@ class DialogoHabito(QDialog):
             b.setFixedSize(32, 32)
             b.setToolTip(self.NOMES[i])
             b.setCursor(Qt.PointingHandCursor)
-            b.setStyleSheet("QPushButton { padding: 0; border-radius: 16px; } "
-                            "QPushButton:checked { background: #4772fa; border: 1px solid #4772fa; color: white; }")
+            b.setStyleSheet(f"QPushButton {{ padding: 0; border-radius: 16px; }} "
+                            f"QPushButton:checked {{ background: {tema.atual.destaque}; "
+                            f"border: 1px solid {tema.atual.destaque}; color: {tema.atual.sobre_destaque}; }}")
             b.toggled.connect(self._dias_mudaram)
             self.dias.append(b)
             caixa.addWidget(b)
@@ -749,65 +751,3 @@ class DialogoSincronizacao(QDialog):
 
     def resultado(self) -> tuple[str, str]:
         return self.url.text().strip(), self.token.text().strip()
-
-
-class DialogoConfiguracoes(QDialog):
-    """Preferências de notificação (ficam em ~/.tarefas/config.json)."""
-
-    def __init__(self, parent, prefs: dict):
-        super().__init__(parent)
-        self.setWindowTitle("Configurações")
-        self.setMinimumWidth(380)
-        lay = QVBoxLayout(self)
-        lay.addWidget(QLabel("Notificações"))
-        form = QFormLayout()
-        form.setSpacing(10)
-        self.aviso_na_tela = QCheckBox("Mostrar a janelinha de lembrete (com Adiar e Concluir)")
-        self.aviso_na_tela.setChecked(bool(prefs.get("aviso_na_tela", True)))
-        form.addRow(self.aviso_na_tela)
-        self.bandeja = QCheckBox("Continuar rodando na bandeja ao fechar a janela (recomendado)")
-        self.bandeja.setChecked(bool(prefs.get("fechar_para_bandeja", True)))
-        form.addRow(self.bandeja)
-        self.iniciar = QCheckBox("Abrir junto com o Windows")
-        self.iniciar.setChecked(bool(prefs.get("iniciar_com_windows", False)))
-        self.iniciar.setVisible(autostart.disponivel())
-        form.addRow(self.iniciar)
-        self.segunda = QCheckBox("Semana começa na segunda-feira (no calendário)")
-        self.segunda.setChecked(bool(prefs.get("semana_comeca_segunda", False)))
-        form.addRow(self.segunda)
-        self.resumo = QCheckBox("Resumo do dia")
-        self.resumo.setChecked(bool(prefs.get("resumo_diario", True)))
-        form.addRow(self.resumo)
-        self.hora_resumo = QTimeEdit()
-        self.hora_resumo.setDisplayFormat("HH:mm")
-        h, m = (int(x) for x in str(prefs.get("resumo_hora", "08:00")).split(":"))
-        self.hora_resumo.setTime(QTime(h, m))
-        form.addRow("Avisar a partir das", self.hora_resumo)
-        lay.addLayout(form)
-        lay.addWidget(QLabel("Claude (opcional)"))
-        form2 = QFormLayout()
-        form2.setSpacing(10)
-        self.chave_ia = QLineEdit(str(prefs.get("claude_api_key", "")))
-        self.chave_ia.setEchoMode(QLineEdit.Password)
-        self.chave_ia.setPlaceholderText("sk-ant-... (fica só neste computador)")
-        self.modelo_ia = QLineEdit(str(prefs.get("claude_modelo", "")))
-        self.modelo_ia.setPlaceholderText("vazio = modelo padrão")
-        form2.addRow("Chave da API", self.chave_ia)
-        form2.addRow("Modelo", self.modelo_ia)
-        lay.addLayout(form2)
-        botoes = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        botoes.accepted.connect(self.accept)
-        botoes.rejected.connect(self.reject)
-        lay.addWidget(botoes)
-
-    def resultado(self) -> dict:
-        return {
-            "aviso_na_tela": self.aviso_na_tela.isChecked(),
-            "fechar_para_bandeja": self.bandeja.isChecked(),
-            "iniciar_com_windows": self.iniciar.isChecked(),
-            "resumo_diario": self.resumo.isChecked(),
-            "resumo_hora": self.hora_resumo.time().toString("HH:mm"),
-            "semana_comeca_segunda": self.segunda.isChecked(),
-            "claude_api_key": self.chave_ia.text().strip(),
-            "claude_modelo": self.modelo_ia.text().strip(),
-        }

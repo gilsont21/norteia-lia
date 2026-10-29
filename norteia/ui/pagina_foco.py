@@ -57,12 +57,12 @@ class AnelFoco(QWidget):
             for i in range(n):
                 ang = math.radians(i * 360 / n - 90)
                 r0, r1 = lado / 2 - 9, lado / 2 - 2
-                cor = QColor(self.cor) if i < marcados else QColor("#2c2c2c")
+                cor = QColor(self.cor) if i < marcados else QColor(tema.atual.borda)
                 p.setPen(QPen(cor, 2, Qt.SolidLine, Qt.RoundCap))
                 p.drawLine(QPointF(centro.x() + r0 * math.cos(ang), centro.y() + r0 * math.sin(ang)),
                            QPointF(centro.x() + r1 * math.cos(ang), centro.y() + r1 * math.sin(ang)))
         else:
-            p.setPen(QPen(QColor("#2e2e2e"), 3))
+            p.setPen(QPen(QColor(tema.atual.borda), 3))
             p.drawEllipse(r)
             if self.fracao > 0:
                 p.setPen(QPen(QColor(self.cor), 4, Qt.SolidLine, Qt.RoundCap))
@@ -91,7 +91,7 @@ def _duracao_curta(segundos: int) -> str:
 
 def _valor_com_unidades(segundos: int) -> str:
     m = int(segundos) // 60
-    pq = "font-size: 10px; color: #8c8c8c;"
+    pq = f"font-size: 10px; color: {tema.atual.apagado};"
     if m >= 60:
         return f"{m // 60}<span style='{pq}'> h </span>{m % 60}<span style='{pq}'> m</span>"
     return f"{m}<span style='{pq}'> m</span>"

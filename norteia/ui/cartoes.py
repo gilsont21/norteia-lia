@@ -51,7 +51,7 @@ class DelegadoCartao(QStyledItemDelegate):
             c = QRectF(area_circulo(r)).adjusted(1, 1, -1, -1)
             if t.concluida:
                 p.setPen(Qt.NoPen)
-                p.setBrush(QColor("#5c5c5c"))
+                p.setBrush(QColor(tema.atual.caixa))
                 p.drawEllipse(c)
                 p.setPen(QPen(QColor("#ffffff"), 1.6, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
                 m = c.center()
